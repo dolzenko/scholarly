@@ -1,0 +1,14 @@
+development:
+  adapter: mysql
+  database: <%= ENV["DB"] || "scholarly_dev" %>
+  host: 192.168.204.1
+  port: 3306
+  username: root
+  password: "root-password"
+production:
+  adapter: mysql
+  database: <%= ENV["DB"] || "scholarly_production" %>
+  host: 192.168.204.1
+  port: 3306
+  username: root
+  password: "root-password"

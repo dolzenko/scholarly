@@ -1,0 +1,20 @@
+<% for dc in @scholar.delegate_calls %>
+  <% f = File.join("/reflexive/files", dc[:file]) %>
+  <%= link_to f, f %>
+  <div>
+    <%= dc[:arguments] %>
+  </div>
+<% end %>
+
+<% if false %>
+  <div>
+    <%= failure[:title] %>
+    <br/>
+    <% f = File.join("/reflexive/files", failure[:file]) %>
+    <%= link_to f, f %>
+
+    <pre>
+      <%= failure[:info] %>
+    </pre>
+  </div>
+<% end %>

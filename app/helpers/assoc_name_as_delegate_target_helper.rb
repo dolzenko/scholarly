@@ -1,0 +1,2 @@
+module AssocNameAsDelegateTargetHelper
+end

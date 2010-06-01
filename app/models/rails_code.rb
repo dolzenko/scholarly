@@ -1,0 +1,3 @@
+class RailsCode < RubyCode
+  
+end
