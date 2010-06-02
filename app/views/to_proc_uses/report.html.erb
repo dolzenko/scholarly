@@ -1,0 +1,10 @@
+<div>
+  <h2>Files parsed: <%= @scholar.files_count %> </h2>
+
+  <% for to_proc_use_case in @scholar.to_proc_uses %>
+    <div>
+      <%= link_to local_path_to_uri(to_proc_use_case[:file]),
+                  local_path_to_uri(to_proc_use_case[:file]) %>
+    </div>
+  <% end %>
+</div>

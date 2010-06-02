@@ -1,0 +1,21 @@
+<div class="report_part">
+  <h2>
+    <%= title %>: <%= entries.size %> cases
+    (<%= 100 * entries.size / total %> %)
+  </h2>
+
+  <%= highlight(sample) %>
+
+  <div style="display: none;">
+    <i>file</i> : <i>delegation target</i>
+    <% for info in entries %>
+      <div>
+        <%# f = File.join("/reflexive/files", info[:file]) %>
+        <%#= link_to f, f %>
+        <%= link_to local_path_to_uri(info[:file]), local_path_to_uri(info[:file]) %>
+        :
+        <%= info[:delegation_target] %>
+      </div>
+    <% end %>
+  </div>
+</div>

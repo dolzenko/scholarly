@@ -1,23 +1,33 @@
 <div>
   <h2>Files parsed: <%= @scholar.files_count %> </h2>
 
-  <h2>Classes delegating to association: <%= @scholar.delegates_to_assoc.size %></h2>
-  <div>
-    <% for file in  @scholar.delegates_to_assoc %>
-      <div>
-        <% f = File.join("/reflexive/files", file) %>
-        <%= link_to f, f %>
-      </div>
-    <% end %>
-  </div>
-  
-  <h2>Classes delegating to something else: <%= @scholar.delegates.size %></h2>
-  <div>
-    <% for file in  @scholar.delegates %>
-      <div>
-        <% f = File.join("/reflexive/files", file) %>
-        <%= link_to f, f %>
-      </div>
-    <% end %>
-  </div>
+  <% total = @scholar.delegates_to_association.size + @scholar.delegates_to_else.size %>
+
+  <%= render "report_part",
+             :entries => @scholar.delegates_to_association,
+             :total => total,
+             :title => "Classes delegating to association",
+             :sample => <<-RUBY
+class Post
+  belongs_to :blog
+  delegate :sub_domain, :to => :blog
+end
+             RUBY
+  %>
+
+  <%= render "report_part",
+             :entries => @scholar.delegates_to_else,
+             :total => total,
+             :title => "Classes delegating to something else",
+             :sample => <<-RUBY
+class Post
+  belongs_to :blog
+  delegate :sub_domain, :to => :meth
+
+  def meth
+    # ... 
+  end
+end
+             RUBY
+  %>
 </div>

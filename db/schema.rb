@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20100601142201) do
+ActiveRecord::Schema.define(:version => 20100602065909) do
 
   create_table "git_hub_code_search_results", :force => true do |t|
     t.text     "result"
@@ -36,5 +36,7 @@ ActiveRecord::Schema.define(:version => 20100601142201) do
     t.string   "clone_state"
     t.integer  "clone_attempts"
   end
+
+  add_index "ruby_codes", ["clone_state"], :name => "index_ruby_codes_on_clone_state"
 
 end

@@ -8,9 +8,12 @@ module Scholarly
   class CodeRepository
     class << self
       attr_accessor :clone_retry_count
+      attr_accessor :clone_timeout_minutes
     end
     self.clone_retry_count = 0
-    
+    self.clone_timeout_minutes = 5
+
+
     # Clones repository with uri at path
     def self.clone(path, uri)
       raise ArgumentError, "don't know how to create Repository from #{ uri }" unless uri.include?("github")
@@ -26,31 +29,17 @@ module Scholarly
       Dir.chdir(dir) do
         begin
           try_count += 1
+          
           cmd = "git clone --quiet --depth 1 #{ uri }"
-#          ShellOut.shell_out_with_system(cmd, :raise_exceptions => true, :verbose => true)
-          puts "spawn(#{cmd})"
+          puts "Executing: #{ cmd }"
           git_pid = spawn(cmd, :chdir => dir)
-          timeout = 5 * 60
-          begin
-            puts "Waiting for Git to exit..."
-            while timeout > 0 && Process.waitpid(git_pid, Process::WNOHANG).nil? # while git finishes
-              sleep(2) # probing every 2 seconds
-              print "."
-              timeout -= 2
-              if timeout < 0
-                puts "Git timed out"
-                raise "Git timed out"
-              end
-            end
-          rescue Errno::ECHILD => e
-            # git finished
-            raise unless e.message == "No child processes"
-            puts "Swallowed Errno::ECHILD"
-          end
-          # $CHILD_STATUS.exitstatus is available after Process.waitpid(git_pid, Process::WNOHANG)
-          raise "Git command exited with non-zero status" if $CHILD_STATUS.exitstatus != 0
+
+          wait_for_process_with_timeout(git_pid, clone_timeout_minutes)
+
+          prune_cloned_dir(dir)
         rescue Exception => e
           puts Exception.error_print(e)
+          
           if e.is_a?(Interrupt) || try_count >= clone_retry_count
             # user interrupt or can't retry any longer
             FileUtils.rm_rf(cloned_path)
@@ -60,15 +49,82 @@ module Scholarly
             retry
           end
         ensure
-          # kill git when interrupted
-          puts "Killing Git with #{ git_pid } pid"
-          Process.kill(:KILL, git_pid) rescue nil
-          puts "Waiting on Git with #{ git_pid } pid"
-          Process.waitpid(git_pid) rescue nil
+          # kill git when interrupted for any reason
+          terminate_process(git_pid)
         end
       end
 
       cloned_path
+    end
+
+    def self.terminate_process(git_pid)
+      puts "\nCleaning up after Git with #{ git_pid } pid (kill -9 && wait)..."
+      Process.kill(:TERM, git_pid) rescue nil
+      Process.waitpid(git_pid) rescue nil
+    end
+
+    # Waits for process with `git_pid` to exit.
+    # If process doesn't terminate in `timeout_minutes` - raises exception.
+    # If process terminates with non-zero - raises exception.
+    #
+    # Tries to return process exit status.
+    def self.wait_for_process_with_timeout(git_pid, timeout_minutes)
+      timeout = timeout_minutes * 60
+      begin
+        print "Waiting for Git with pid #{ git_pid } to exit (with #{ timeout_minutes } minutes timeout)..."
+        while timeout > 0 && Process.waitpid(git_pid, Process::WNOHANG).nil? # while git finishes
+          sleep(2) # probing every 2 seconds
+          print "."
+          timeout -= 2
+          if timeout <= 0
+            puts "\nGit timed out"
+            raise "Git timed out"
+          end
+        end
+      rescue Errno::ECHILD => e
+        # git finished
+        raise unless e.message == "No child processes"
+        puts "\nSwallowed Errno::ECHILD"
+      end
+
+      if $CHILD_STATUS
+        # $CHILD_STATUS.exitstatus is available after Process.waitpid(git_pid, Process::WNOHANG)
+        raise "Git command exited with non-zero status" if $CHILD_STATUS.exitstatus != 0
+        $CHILD_STATUS.exitstatus
+      else
+        nil
+      end
+    end
+
+    # Returns true when directory is empty (removing it)
+    def self.prune_cloned_dir(dir)
+      file_emptiness = true
+      dirs_emptiness = true
+      files_to_delete = []
+
+      Dir.new(dir).each do |entry|
+        next if entry.in?(%w(. ..))
+
+        entry_path = File.join(dir, entry)
+
+        if File.directory?(entry_path)
+          unless prune_cloned_dir(entry_path) # if at least one directory is not empty
+            dirs_emptiness = false
+          end
+        else
+          if entry_path =~ /\.(erb|rb)$/
+            file_emptiness = false
+          else
+            files_to_delete << entry_path
+          end
+        end
+      end
+      
+      files_to_delete.each { |e| File.delete(e) }
+
+      dir_is_empty = file_emptiness && dirs_emptiness
+      Dir.rmdir(dir) if dir_is_empty
+      dir_is_empty
     end
   end
 end

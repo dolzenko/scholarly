@@ -1,6 +1,10 @@
 Scholarly::Application.routes.draw do |map|
-  match 'debug/debug' => 'debug#debug'
   match 'assoc_name_as_delegate_target/report' => 'assoc_name_as_delegate_target#report'
+  match 'validates_presence_of_belongs_to/report' => 'validates_presence_of_belongs_to#report'
+  match 'to_proc_uses/report' => 'to_proc_uses#report'
+
+  match 'debug/debug' => 'debug#debug'
+  
   # The priority is based upon order of creation:
   # first created -> highest priority.
 

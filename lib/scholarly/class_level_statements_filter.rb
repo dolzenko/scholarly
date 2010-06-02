@@ -3,6 +3,12 @@ module Scholarly
   # i.e. method/class definitions are excluded
   class ClassLevelStatementsFilter
     attr_reader :statements
+
+    def self.filter(ast)
+      filter = new(ast)
+      filter.walk
+      filter.statements
+    end
     
     def initialize(ast)
       @ast = ast

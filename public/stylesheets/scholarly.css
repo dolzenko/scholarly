@@ -1,0 +1,20 @@
+.report_part h2
+{
+  text-decoration: none;
+  color: blue;
+  cursor: pointer;
+}
+
+.report_part h2:hover
+{
+  text-decoration: underline;
+}
+
+a
+{
+  text-decoration: none;
+}
+a:hover
+{
+  text-decoration: underline;
+}

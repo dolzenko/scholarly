@@ -1,0 +1,54 @@
+<div>
+  <h2>Files parsed: <%= @scholar.files_count %> </h2>
+
+  <% total = %w(proper wrong none).map { |e| @scholar.send(e).size }.sum %>
+
+  <%= render "report_part",
+             :entries => @scholar.proper,
+             :total => total,
+             :title => "Properly validated belongs_to associations",
+             :sample => <<-RUBY
+  class Comment
+    belongs_to :post
+    validates_presence_of :post_id
+  end
+             RUBY
+  %>
+
+  <%= render "report_part",
+             :entries => @scholar.wrong,
+             :total => total,
+             :title => "Improperly validated belongs_to associations",
+             :sample => <<-RUBY
+  class Comment
+    belongs_to :post
+    validates_presence_of :post
+  end
+             RUBY
+  %>
+
+  <%= render "report_part",
+             :entries => @scholar.none,
+             :total => total,
+             :title => "Not validated belongs_to associations",
+             :sample => <<-RUBY
+  class Comment
+    belongs_to :post
+  end
+             RUBY
+  %>
+
+  <% if false %>
+    <h2>Self test failures: <%= @scholar.self_test_failures.size %></h2>
+    <div>
+      <% for info in @scholar.self_test_failures %>
+        <%= info[:title] %>
+        <div>
+          <% f = File.join("/reflexive/files", info[:file]) %>
+          <%#= link_to f, f %>
+          <%= link_to local_path_to_uri(f), local_path_to_uri(f) %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

@@ -53,4 +53,26 @@ Later
   * collect as many Rails source codes as possible
 
   
-123  
+# Statistical Accuracy
+654
+
+13
+9
+77
+
+740
+8
+8
+82
+
+4031
+11
+8
+80
+
+11298
+12
+8
+78
+
+
