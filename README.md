@@ -7,6 +7,10 @@ Ruby 1.9.2.
 
 It can be used to generate report like these:
 
+[Association as <code>delegate</code> target report](http://dolzhenko.org/scholarly/assoc_name_as_delegate_target/report.htm)
+
+[Validation of <code>belongs_to</code> association report](http://dolzhenko.org/scholarly/validates_presence_of_belongs_to/report.htm)
+
 ## Hacking
 
 ### Preliminary Steps
