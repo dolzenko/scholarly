@@ -1,11 +1,7 @@
 class ToProcUsesController < ApplicationController
   def report
-    @scholar = Scholarly::Scholars::ToProcUses.run!
-  end
-
-  module Qwe
-    def to_proc
-      123
-    end
+    start = Time.now
+    @scholar = Scholarly::Scholars::ToProcUses.run!(params[:offset].to_i, params[:limit] || 1000)
+    @elapsed_minutes = (Time.now - start) / 60
   end
 end

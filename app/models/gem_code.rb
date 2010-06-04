@@ -14,7 +14,8 @@ class GemCode < RubyCode
 
       next if content.strip.empty?
 
-      yield content, meta["path"]
+      env = { :file => File.join(path, meta["path"]) }
+      yield content, env
     end
   end
 end

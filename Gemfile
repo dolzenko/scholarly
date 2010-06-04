@@ -4,7 +4,7 @@ gem 'rails', '3.0.0.beta3'
 gem 'sqlite3-ruby', :require => 'sqlite3'
 gem 'dolzenko', '0.0.20', :require => %w(dolzenko/core_ext/kernel/in dolzenko/core_ext/kernel/r)
 gem 'method_extensions'
-gem 'nokogiri'
+gem 'nokogiri', '1.4.2'
 gem 'mysql'
 gem 'reflexive'
 gem 'coderay'

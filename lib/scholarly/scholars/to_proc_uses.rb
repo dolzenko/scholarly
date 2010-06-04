@@ -13,12 +13,14 @@ module Scholarly::Scholars
 
     def study(ast, env)
       self.files_count += 1
+
       begin
         bodies = Scholarly::MethodFilter.new(ast).method_bodies("to_proc")
       rescue Exception => e
         puts e.error_print
         return
       end
+      
       for body in bodies
         unless @method_bodies.include?(body)
           @method_bodies << body
@@ -30,7 +32,7 @@ module Scholarly::Scholars
     end
 
     def self_test(ast, bodies, env)
-      if (grep_count = ast.inspect.scan(/\bto_proc\b/).size) != bodies.size
+      if (grep_count = ast.inspect.scan(/\bdef\s+to_proc\b/).size) != bodies.size
         puts "#{self.class.name} self test failed for #{ env }: #{ grep_count } found with grep, #{ bodies.size } with parser"
       end
     end

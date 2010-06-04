@@ -18,29 +18,30 @@ module Scholarly
       self.files_count = 0
     end
 
-    def self.run!
+    def self.run!(offset = 0, limit = 1000)
       scholar = new
       klass = code_class.constantize
       
-      klass.find_each(:conditions => {:clone_state => "cloned"},
-                      :batch_size => 100) do |ruby_code|
+#      klass.find_each(:conditions => {:clone_state => "cloned"},
+#                      :batch_size => 100) do |ruby_code|
+      klass.order(:id).offset(offset).limit(limit).each do |ruby_code|
         study_ruby_code(ruby_code, scholar)
       end
       scholar
     end
 
     def self.study_ruby_code(ruby_code, scholar = new)
-      ruby_code.each_file(path_glob) do |source, file|
-        study_source(source, scholar, file)
+      ruby_code.each_file(path_glob) do |source, env|
+        study_source(source, scholar, env)
       end
       scholar 
     end
 
-    def self.study_source(source, scholar = new, file = "(eval)")
-      ast = parse_source(source, file)
+    def self.study_source(source, scholar = new, env = { :file => "(eval)" })
+      ast = parse_source(source, env)
 
       if studies_whole_ast
-        scholar.study(ast, { :file => file })
+        scholar.study(ast, env)
       else
         descendants = DescendantFilter.new(ast[1]).descendants_of(studies_descendants_of)
 
@@ -49,13 +50,13 @@ module Scholarly
 
           class_level_statements = ClassLevelStatementsFilter.filter(body_statement)
 
-          scholar.study(class_level_statements, { :file => file })
+          scholar.study(class_level_statements, env)
         end
       end
       scholar
     end
 
-    def self.parse_source(source, file)
+    def self.parse_source(source, env)
       begin
         parser = SexpBuilderWithScannerEvents.new(source)
         ast = parser.parse
@@ -63,7 +64,7 @@ module Scholarly
         ast
       rescue Exception => e
         raise if e.class.name.in?(["IRB::Abort", "Interrupt"])
-        puts "Exception thrown while trying to parse #{ file }:"
+        puts "Exception thrown while trying to parse #{ env }:"
         e.set_backtrace(Rails.backtrace_cleaner.clean(e.backtrace))
         puts e.error_print
         return

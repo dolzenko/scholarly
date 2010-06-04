@@ -95,8 +95,7 @@ module Scholarly
         keep_walking(method, arguments)
       end
 
-      def on_command_call(*args)
-        # def on_command_call(receiver, dot, method, args)
+      def on_command_call(receiver, dot, method, args)
         keep_walking(*args)
       end
 

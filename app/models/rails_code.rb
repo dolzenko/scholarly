@@ -9,7 +9,8 @@ class RailsCode < RubyCode
       source = IO.read(file)
       next if source.strip.empty?
 
-      yield source, file
+      env = { :file => file }
+      yield source, env
     end
   end
 end

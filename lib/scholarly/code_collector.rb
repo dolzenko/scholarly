@@ -55,9 +55,9 @@ module Scholarly
       rails_codes_root = root + "rails"
       FileUtils.mkdir_p(rails_codes_root) unless File.directory?(rails_codes_root)
 
-      # update_rails_codes_from_cached_uris!
-      
-      RubyCode.where(:clone_state => 'not_attempted').to_a.first(600).each do |ruby_code|
+      update_rails_codes_from_cached_uris! if RubyCode.count == 0
+
+      ruby_codes_in_batches do |ruby_code|
         next unless ruby_code.uri.include?("github.com")
 
         next if ruby_code.clone_state.in?(["cloned", "failed", "disabled"])
@@ -77,6 +77,15 @@ module Scholarly
           puts "Failed to clone #{ ruby_code.uri } for #{ ruby_code.clone_attempts } time(s)"
         end
       end
+    end
+
+    def ruby_codes_in_batches(&block)
+      RubyCode.find_each(:conditions => { :clone_state => 'not_attempted' },
+                         :batch_size => 100, &block)
+    end
+
+    def sample_ruby_codes(&block)
+      RubyCode.where(:clone_state => 'not_attempted').to_a.first(600).each(&block)
     end
 
     def self.update_rails_codes_from_cached_uris!

@@ -1,5 +1,8 @@
 <div>
-  <h2>Files parsed: <%= @scholar.files_count %> </h2>
+  <h2>
+    Files parsed: <%= @scholar.files_count %>
+    (in <%= @elapsed_minutes %> minutes)
+  </h2>
 
   <% for to_proc_use_case in @scholar.to_proc_uses %>
     <div>

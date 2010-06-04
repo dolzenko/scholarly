@@ -24,13 +24,11 @@ module Scholarly
             "lang:ruby RAILS_GEM_VERSION\\s=\\s['\"]2\\.0\\.5 file:environment\\.rb",].reverse
 
     # Returns all repository uris for queries
-    def self.repository_uris
-      if GoogleCodeSearchResult.count == 0
-        for q in RAILS_QUERIES
-          start(q)
-        end
+    def self.cache_results!
+      GoogleCodeSearchResult.delete_all
+      for q in RAILS_QUERIES
+        start(q)
       end
-      cached_repository_uris
     end
 
     def self.cached_repository_uris
@@ -51,18 +49,15 @@ module Scholarly
         d.remove_namespaces!
 
         if GoogleCodeSearchResult.exists?(:uri => uri)
-          puts "skipped #{ uri }... "
+          puts "Skipped #{ uri } (already exists in DB)"
         else
-          puts "stored result of #{ uri }"
           GoogleCodeSearchResult.create!(:start_index => d.xpath("//startIndex")[0].text,
                                          :result => result,
                                          :uri => uri)
+          puts "Stored result of #{ uri }"
         end
         next_link = d.xpath("//link").detect { |link| link["rel"] == "next" }
-        unless next_link
-          puts "next_link not found"
-          break
-        end
+        break unless next_link
         new_uri = next_link["href"]
         break if new_uri == uri
         uri = new_uri
