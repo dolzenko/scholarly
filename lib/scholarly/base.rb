@@ -30,6 +30,14 @@ module Scholarly
       scholar
     end
 
+    def self.run_on_cached!
+      new.tap do |scholar|
+        CodeCollector.each_cached_ast do |file, ast|
+          study_ast(ast, scholar, { :file => file })
+        end
+      end
+    end
+
     def self.study_ruby_code(ruby_code, scholar = new)
       ruby_code.each_file(path_glob) do |source, env|
         study_source(source, scholar, env)
@@ -39,21 +47,40 @@ module Scholarly
 
     def self.study_source(source, scholar = new, env = { :file => "(eval)" })
       ast = parse_source(source, env)
+      study_ast(ast, scholar, env)      
+    end
 
+    def self.study_ast(ast, scholar, env)
       if studies_whole_ast
         scholar.study(ast, env)
       else
-        descendants = DescendantFilter.new(ast[1]).descendants_of(studies_descendants_of)
+        swallow_and_report_exceptions(env[:file]) do
+          descendants = DescendantFilter.new(ast[1]).descendants_of(studies_descendants_of)
 
-        for descendant in descendants
-          body_statement = descendant[3][1]
+          for descendant in descendants
+            body_statement = descendant[3][1]
 
-          class_level_statements = ClassLevelStatementsFilter.filter(body_statement)
+            swallow_and_report_exceptions(env[:file]) do
+              class_level_statements = ClassLevelStatementsFilter.filter(body_statement)
 
-          scholar.study(class_level_statements, env)
+              scholar.study(class_level_statements, env)
+            end
+          end
         end
       end
       scholar
+    end
+
+    def self.swallow_and_report_exceptions(*info)
+      begin
+        yield
+      rescue Exception => e
+        raise if e.class.name.in?(["IRB::Abort", "Interrupt"])
+        puts "Exception thrown #{ info.inspect }:"
+        e.set_backtrace(Rails.backtrace_cleaner.clean(e.backtrace))
+        puts e.error_print
+        return
+      end
     end
 
     def self.parse_source(source, env)

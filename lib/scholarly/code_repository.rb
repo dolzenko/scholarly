@@ -31,12 +31,10 @@ module Scholarly
           try_count += 1
           
           cmd = "git clone --quiet --depth 1 #{ uri }"
-          puts "Executing: #{ cmd }"
+          puts "=> Executing: #{ cmd }"
           git_pid = spawn(cmd, :chdir => dir)
 
           wait_for_process_with_timeout(git_pid, clone_timeout_minutes)
-
-          prune_cloned_dir(dir)
         rescue Exception => e
           puts Exception.error_print(e)
           
@@ -96,7 +94,10 @@ module Scholarly
       end
     end
 
+    # Removes file in dir and all subdirs which don't match NOT_PRUNABLE_FILE
     # Returns true when directory is empty (removing it)
+    NOT_PRUNABLE_FILE = /\.(erb|rb)$/
+
     def self.prune_cloned_dir(dir)
       file_emptiness = true
       dirs_emptiness = true
@@ -112,7 +113,7 @@ module Scholarly
             dirs_emptiness = false
           end
         else
-          if entry_path =~ /\.(erb|rb)$/
+          if entry_path =~ NOT_PRUNABLE_FILE  
             file_emptiness = false
           else
             files_to_delete << entry_path

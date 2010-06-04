@@ -9,7 +9,6 @@ module Scholarly
     end
 
     self.root = Pathname("../../../silo").expand_path(__FILE__)
-    # self.root = Pathname("/root/silo")
 
     def self.collect_gems!
       rubygems_codes_root = root + "rubygems"
@@ -51,10 +50,11 @@ module Scholarly
       fetcher.download(gemspec, "http://gems.github.com/", target_dir)
     end
 
-    def self.collect_rails!
-      rails_codes_root = root + "rails"
-      FileUtils.mkdir_p(rails_codes_root) unless File.directory?(rails_codes_root)
+    def self.rails_codes_root
+      (root + "rails").tap { |d| FileUtils.mkdir_p(d) unless File.directory?(d) }
+    end
 
+    def self.collect_rails!
       update_rails_codes_from_cached_uris! if RubyCode.count == 0
 
       ruby_codes_in_batches do |ruby_code|
@@ -103,6 +103,62 @@ module Scholarly
         puts "Pruning #{ ruby_code.path }"
         CodeRepository.prune_cloned_dir(ruby_code.path)
       end
+    end
+
+    def self.ast_cache
+      AstCache.new(rails_codes_root + "ast.cache")
+    end
+
+    def self.cache_parsed_asts!
+      count = 0
+      ast_cache.write do |writer|
+
+        RailsCode.find_each(:conditions => { :clone_state => 'cloned' },
+                            :batch_size => 10) do |ruby_code|
+
+          next unless File.directory?(ruby_code.path)
+
+          puts "Caching #{ ruby_code.path }"
+          ruby_code.each_file("app/models/**/*.rb") do |source, env|
+            next unless ast = Scholarly::Base.parse_source(source, env)
+            writer.call([env[:file], ast])
+          end
+          count += 1
+          break if count > 2
+        end
+      end
+      nil
+    end
+
+    def self.cache_parsed_asts!
+      file_count = 0
+      count = 0
+      ast_cache.write do |writer|
+
+        RailsCode.find_each(:conditions => { :clone_state => 'cloned' },
+                            :batch_size => 10) do |ruby_code|
+
+          next unless File.directory?(ruby_code.path)
+
+          puts "Caching #{ ruby_code.path }"
+          ruby_code.each_file("app/models/**/*.rb") do |source, env|
+            next unless ast = Scholarly::Base.parse_source(source, env)
+            file_count += 1
+            writer.call([env[:file], ast])
+          end
+          count += 1
+          # break if count > 2
+        end
+      end
+      file_count
+    end
+
+    def self.each_cached_ast
+      file_count = 0
+      ast_cache.each do |file, ast|
+        yield file, ast
+      end
+      file_count
     end
   end
 end

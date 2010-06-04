@@ -14,7 +14,9 @@
         <%#= link_to f, f %>
         <%= link_to local_path_to_uri(info[:file]), local_path_to_uri(info[:file]) %>
         :
-        <%= info[:delegation_target] %>
+        <code>
+          <%= info[:delegation_target] %>
+        </code>
       </div>
     <% end %>
   </div>

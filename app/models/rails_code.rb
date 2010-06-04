@@ -1,5 +1,7 @@
 class RailsCode < RubyCode
   def each_file(glob)
+    return unless path
+    
     unless File.directory?(path)
       puts "#{ path } registered as cloned in DB but is missing from file system"
       return

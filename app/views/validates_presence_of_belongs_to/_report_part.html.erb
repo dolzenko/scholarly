@@ -14,7 +14,9 @@
         <%#= link_to f, f %>
         <%= link_to local_path_to_uri(info[:file]), local_path_to_uri(info[:file]) %>
         :
-        <%= info[:assoc_name] %>
+        <code>
+          <%= info[:assoc_name] %>
+        </code>
       </div>
     <% end %>
   </div>
