@@ -79,12 +79,12 @@ module Scholarly
       end
     end
 
-    def ruby_codes_in_batches(&block)
+    def self.ruby_codes_in_batches(&block)
       RubyCode.find_each(:conditions => { :clone_state => 'not_attempted' },
                          :batch_size => 100, &block)
     end
 
-    def sample_ruby_codes(&block)
+    def self.sample_ruby_codes(&block)
       RubyCode.where(:clone_state => 'not_attempted').to_a.first(600).each(&block)
     end
 

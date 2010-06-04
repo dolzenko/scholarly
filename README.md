@@ -26,7 +26,9 @@ included in `db/development.sqlite3`.
 
 To clone repositories
 
-    
+    > rails runner 'Scholarly::CodeCollector.collect_rails!'
+
+
 
 Scholarly comes with scrapers to GitHub and Google Code Search which can fetch
 the links to Rails projects. As any screen scraper these are pretty ad-hoc and
